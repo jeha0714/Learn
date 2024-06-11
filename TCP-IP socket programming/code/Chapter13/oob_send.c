@@ -27,13 +27,14 @@ int main(int argc, char *argv[])
 	if (connect(sock, (struct sockaddr*)&recv_adr, sizeof(recv_adr)) == -1)
 		error_handling("connect() error!");
 
-	write(sock, "123", strlen("123"));
-	sleep(1);
-	send(sock, "4", strlen("4"), MSG_OOB);
-	sleep(1);
-	write(sock, "567", strlen("567"));
-	sleep(1);
+	//write(sock, "123", strlen("123"));
+	//sleep(1);
+	//send(sock, "4", strlen("4"), MSG_OOB);
+	//sleep(1);
+	//write(sock, "567", strlen("567"));
+	//sleep(1);
 	send(sock, "890", strlen("890"), MSG_OOB);
+	send(sock, "1234", strlen("1234"), 0);
 	sleep(1);
 	close(sock);
 	return (0);
