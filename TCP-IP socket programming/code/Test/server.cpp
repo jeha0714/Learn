@@ -1,65 +1,113 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-void	error_handling(char *message)
+#define BUF_SIZE 30
+void error_handling(const char *message);
+void read_routine(int sock);
+void write_routine(int sock);
+
+int main(int argc, char *argv[])
 {
-	write(STDERR_FILENO, message, strlen(message));
-	write(STDERR_FILENO, "\n", 1);
-	exit(1);
+	int serv_sock, clnt_sock;
+	struct sockaddr_in serv_adr, clnt_adr;
+
+	pid_t pid;
+	socklen_t adr_sz;
+	int str_len, state;
+	char buf[BUF_SIZE];
+	if (argc != 2)
+	{
+		printf("Usage : %s <port>\n", argv[0]);
+		exit (1);
+	}
+
+	serv_sock = socket(PF_INET, SOCK_STREAM, 0);
+	memset(&serv_adr, 0, sizeof(serv_adr));
+	serv_adr.sin_family = AF_INET;
+	serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
+	serv_adr.sin_port = htons(atoi(argv[1]));
+
+	if (bind(serv_sock, (struct sockaddr*)&serv_adr, sizeof(serv_adr)) == -1)
+		error_handling("bind() error");
+	if (listen(serv_sock, 5) == -1)
+		error_handling("listen() error");
+
+	while (1)
+	{
+		adr_sz = sizeof(clnt_adr);
+		clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_adr, &adr_sz);
+		if (clnt_sock == -1)
+			continue;
+		else
+			puts("new client connected...");
+		pid = fork();
+		if (pid == -1)
+		{
+			close(clnt_sock);
+			continue;
+		}
+		if (pid == 0)
+		{
+			read_routine(clnt_sock);
+		}
+		else
+			write_routine(clnt_sock);
+	}
+	close(serv_sock);
+	return (0);
 }
 
-int	main(int ac, char *av[])
+void read_routine(int sock)
 {
-	int					serv_socket;
-	int					clnt_socket;
-	unsigned int		clnt_addr_size;
-	unsigned int		test_addr_size;
-	int					read_cnt;
-	char				message[1024];
-	struct sockaddr_in	serv_addr;
-	struct sockaddr_in	clnt_addr;
-	struct sockaddr_in	test_addr;
+	char buf[BUF_SIZE];
+	int	result;
 
-	if (ac != 2)
-		error_handling("Usage: ./echo_server <port>");
-
-	memset(&serv_addr, 0, sizeof(serv_addr));
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	serv_addr.sin_port = htons(atoi(av[1]));
-
-	serv_socket = socket(PF_INET, SOCK_STREAM, 0);
-	if (serv_socket == -1)
-		error_handling("socket() error");
-	if (bind(serv_socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)))
-		error_handling("bind() error");
-	if (listen(serv_socket, 5))
-		error_handling("listen() error");
-	clnt_addr_size = sizeof(clnt_addr);
-	for (int i = 0; i < 5; i++)
+	dprintf(2, "Come here!\n");
+	sleep(3);
+	while(1)
 	{
-		if ((clnt_socket = accept(serv_socket, (struct sockaddr *)&clnt_addr, &clnt_addr_size)) == -1)
-			error_handling("accept() error");
-		test_addr_size = sizeof(test_addr);
-		getsockname(clnt_socket, (struct sockaddr*)&test_addr, &test_addr_size);
-		printf("New socket is created [port: %d]\n", ntohs(test_addr.sin_port));
-		printf("<message from %s port: %d>\n", inet_ntoa(clnt_addr.sin_addr), ntohs(clnt_addr.sin_port));
-		connect(serv_socket, (struct sockaddr *)&clnt_addr, sizeof(clnt_addr_size));
-		read_cnt = read(serv_socket, message, 1024);
-		write(STDOUT_FILENO, "\nread from serv_socket: ", 24);
-		write(STDOUT_FILENO, message, read_cnt);
-		while ((read_cnt = read(clnt_socket, message, 1024)) != 0)
-		{
-			write(clnt_socket, message, read_cnt);
-			write(STDOUT_FILENO, message, read_cnt);
-			write(STDOUT_FILENO, "\n", 1);
-		}
-		write(STDOUT_FILENO, "\n", 1);
-		close(clnt_socket);
+		dprintf(2, "Before Write!\n");
+		result = write(sock, "Hello 42Seoul webserv!\n", strlen("Hello 42Seoul webserv!\n"));
+		dprintf(2, "write return value : %d \n", result);
+		sleep(1);
 	}
-	close(serv_socket);
+	sleep(10);
+	//while (1)
+	//{
+	//	int str_len = read(sock, buf, BUF_SIZE);
+	//	if (str_len == 0)
+	//		return ;
+
+	//	buf[str_len] = 0;
+	//	printf("Message from server: %s", buf);
+	//}
+}
+
+void write_routine(int sock)
+{
+	char buf[BUF_SIZE];
+
+	shutdown(sock, SHUT_WR);
+	sleep(100);
+	//while (1)
+	//{
+	//	fgets(buf, BUF_SIZE, stdin);
+	//	if (!strcmp(buf, "q\n") || !strcmp(buf, "Q\n"))
+	//	{
+	//		shutdown(sock, SHUT_WR);
+	//		return ;
+	//	}
+	//	write(sock, buf, strlen(buf));
+	//}
+}
+
+void error_handling(constchar *message)
+{
+	fputs(message, stderr);
+	fputc('\n', stderr);
+	exit (1);
 }

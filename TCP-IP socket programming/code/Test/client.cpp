@@ -13,8 +13,7 @@ int main(int argc, char *argv[])
 	int	sock;
 	char message[BUF_SIZE];
 	int	str_len;
-	struct sockaddr_in serv_adr, peer_addr;
-	socklen_t peer_addr_len = sizeof(peer_addr);
+	struct sockaddr_in serv_adr;
 
 	if (argc != 3)
 	{
@@ -35,9 +34,6 @@ int main(int argc, char *argv[])
 		error_handling("connect() error");
 	else
 		puts("Connected.........");
-
-	getpeername(sock, (struct sockaddr *)&peer_addr, &peer_addr_len);
-	printf("New socket is created [port: %d]\n", ntohs(peer_addr.sin_port));
 
 	while (1)
 	{
