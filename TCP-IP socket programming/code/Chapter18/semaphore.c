@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <unistd.h>
 
-void *read(void *arg);
-void *accu(void *arg);
+void *reads(void *arg);
+void *accus(void *arg);
 static sem_t sem_one;
 static sem_t sem_two;
 static int num;
@@ -14,8 +15,8 @@ int main(int argc, char *argv[])
 	sem_init(&sem_one, 0, 0);
 	sem_init(&sem_two, 0, 1);
 
-	pthread_create(&id_t1, NULL, read, NULL);
-	pthread_create(&id_t2, NULL, accu, NULL);
+	pthread_create(&id_t1, NULL, reads, NULL);
+	pthread_create(&id_t2, NULL, accus, NULL);
 
 	pthread_join(id_t1, NULL);
 	pthread_join(id_t2, NULL);
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
 	return (0);
 }
 
-void *read(void *arg)
+void *reads(void *arg)
 {
 	int i;
 	for (i = 0; i < 5; i++)
@@ -38,9 +39,10 @@ void *read(void *arg)
 	}
 	return (NULL);
 }
-void *accu(void *arg)
+void *accus(void *arg)
 {
 	int sum = 0, i;
+	sleep(3);
 	for (i = 0; i < 5; i++)
 	{
 		sem_wait(&sem_one);
