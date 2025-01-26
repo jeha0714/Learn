@@ -99,11 +99,14 @@ void send_data(FILE* fp, char *ct, char *file_name)
 
 	sprintf(cnt_type, "Content-type:%s\r\n\r\n", ct);
 	send_file = fopen(file_name, "r");
+	dprintf(2, "here?\n");
 	if (send_file == NULL)
 	{
+		dprintf(2, "fail?\n");
 		send_error(fp);
 		return ;
 	}
+	dprintf(2, "success?\n");
 
 	/* 헤더 정보 전송 */
 	fputs(protocol, fp);
@@ -141,15 +144,17 @@ void send_error(FILE* fp)
 	char server[] = "Server:Linux Web Server \r\n";
 	char cnt_len[] = "Content-length:2048\r\n";
 	char cnt_type[] = "Content-type:text/html\r\n\r\n";
-	char content[] = "<html><head><title>NETWORK</title></head>"
-		"<body><font size+5><br>오류 발생! 요청 파일명 및 요청 방식 확인!"
+	char content[] = "<html><head><title>NETWORK</title></head>" \
+		"<body><font size=+5><br>오류 발생! 요청 파일명 및 요청 방식 확인!" \
 		"</font></body></html>";
 
+	dprintf(2," 1\n");
 	fputs(protocol, fp);
 	fputs(server, fp);
 	fputs(cnt_len, fp);
 	fputs(cnt_type, fp);
 	fflush(fp);
+	dprintf(2," 2\n");
 }
 
 void error_handling(char *message)
